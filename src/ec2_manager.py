@@ -1,6 +1,5 @@
 import boto3
-import os
-from .decorators import handle_aws_errors, log_execution_time
+from src.decorators import handle_aws_errors, log_execution_time
 
 
 class EC2Manager:
@@ -31,10 +30,10 @@ class EC2Manager:
                     yield instance['InstanceID']
 
     @handle_aws_errors
-    def stop_instances(self, regionn, instance_ids):
+    def stop_instances(self, region, instance_ids):
         if not instance_ids:
             return
         
-        ec2 = self.session.client('ec2', region_name=regionn)
+        ec2 = self.session.client('ec2', region_name=region)
         ec2.stop_instances(InstanceIds=instance_ids)
-        print(f"Stopped {len(instance_ids)} instances in {regionn}: {instance_ids}")
+        print(f"Stopped {len(instance_ids)} instances in {region}: {instance_ids}")
