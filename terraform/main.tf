@@ -63,6 +63,18 @@ resource "aws_iam_role_policy" "lambda_policy" {
           "logs:PutLogEvents"
         ]
         Resource = "arn:aws:logs:*:*:*"
+      },
+      {
+        Sid      = "SNSPublishAlerts"
+        Effect   = "Allow"
+        Action   = "sns:Publish"
+        Resource = aws_sns_topic.alerts.arn
+      },
+      {
+        Sid      = "S3WriteReports"
+        Effect   = "Allow"
+        Action   = "s3:PutObject"
+        Resource = "${aws_s3_bucket.reports.arn}/*"
       }
     ]
   })
@@ -80,8 +92,10 @@ resource "aws_lambda_function" "cost_sentinel" {
 
   environment {
     variables = {
-      TAG_KEY   = var.tag_key
-      TAG_VALUE = var.tag_value
+      TAG_KEY        = var.tag_key
+      TAG_VALUE      = var.tag_value
+      SNS_TOPIC_ARN  = aws_sns_topic.alerts.arn
+      S3_BUCKET_NAME = aws_s3_bucket.reports.bucket
     }
   }
 }
@@ -107,4 +121,23 @@ resource "aws_lambda_permission" "allow_eventbridge" {
   function_name = aws_lambda_function.cost_sentinel.function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.daily_trigger.arn
+}
+
+# SNS topic for stop-action alerts
+resource "aws_sns_topic" "alerts" {
+  name = var.sns_topic_name
+}
+
+resource "aws_sns_topic_subscription" "alerts_email" {
+  topic_arn = aws_sns_topic.alerts.arn
+  protocol  = "email"
+  endpoint  = var.alert_email
+}
+
+# S3 bucket for JSON summary reports
+# Versioning intentionally omitted — reports are timestamped keys (reports/{iso}.json),
+# so versioning would just add storage cost with no value.
+resource "aws_s3_bucket" "reports" {
+  bucket        = var.report_bucket_name
+  force_destroy = true
 }

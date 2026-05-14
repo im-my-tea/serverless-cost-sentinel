@@ -31,3 +31,20 @@ variable "tag_value" {
   type        = string
   default     = "Dev"
 }
+
+variable "sns_topic_name" {
+  description = "Name of the SNS topic for cost sentinel alerts"
+  type        = string
+  default     = "cost-sentinel-alerts"
+}
+
+variable "alert_email" {
+  description = "Email address to receive SNS alerts (subscription must be confirmed via email)"
+  type        = string
+  sensitive   = true
+}
+
+variable "report_bucket_name" {
+  description = "Globally unique S3 bucket name for storing JSON summary reports"
+  type        = string
+}

@@ -27,7 +27,7 @@ class EC2Manager:
         for page in page_iterator:
             for reservation in page['Reservations']:
                 for instance in reservation['Instances']:
-                    yield instance['InstanceID']
+                    yield instance['InstanceId']
 
     @handle_aws_errors
     def stop_instances(self, region, instance_ids):
